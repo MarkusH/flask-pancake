@@ -13,9 +13,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/MarkusH/flask-pancake",
     packages=setuptools.find_packages(),
-    install_requires=["flask>=1.0", "flask-redis>=0.4.0"],
-    use_scm_version=True,
+    install_requires=["flask>=1.0", "flask-redis>=0.4.0", "cached-property>=1.5,<2"],
+    extras_require={"testing": ["pytest>=5.3,<5.4"]},
     setup_requires=["setuptools_scm>=3.4.2,<4"],
+    use_scm_version=True,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Framework :: Flask",
