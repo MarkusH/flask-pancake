@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import abc
 import random
-import importlib
-from typing import TYPE_CHECKING, Callable, Dict, Generic, TypeVar, Any, Union, Optional
+from typing import TYPE_CHECKING, Callable, Dict, Generic, Optional, TypeVar, Union
 
 from cached_property import cached_property
 from flask import current_app
+
+from .utils import import_from_string
 
 if TYPE_CHECKING:
     from flask import Flask
@@ -20,14 +21,6 @@ EXTENSION_NAME = "pancake"
 _FLAGS: Dict[str, Flag] = {}
 _SWITCHES: Dict[str, Switch] = {}
 _SAMPLES: Dict[str, Sample] = {}
-
-
-def import_from_string(fqn: str) -> Any:
-    module_name, _, attr = fqn.partition(":")
-    module = importlib.import_module(module_name)
-    if attr:
-        return getattr(module, attr)
-    return module
 
 
 class FlaskPancake:
