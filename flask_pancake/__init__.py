@@ -17,6 +17,9 @@ if TYPE_CHECKING:
 DEFAULT_TYPE = TypeVar("DEFAULT_TYPE")
 EXTENSION_NAME = "pancake"
 
+RAW_FALSE = b"0"
+RAW_TRUE = b"1"
+
 
 _FLAGS: Dict[str, Flag] = {}
 _SWITCHES: Dict[str, Switch] = {}
@@ -107,7 +110,7 @@ class BaseFlag(AbstractFlag[bool], abc.ABC):
 
     def is_active(self) -> bool:
         self._redis_client.setnx(self.key, int(self.default))
-        return self._redis_client.get(self.key) == b"1"
+        return self._redis_client.get(self.key) == RAW_TRUE
 
     def disable(self) -> None:
         self._redis_client.set(self.key, 0)
@@ -141,19 +144,39 @@ class Flag(BaseFlag):
         user_key = self.user_key
         if user_key is not None:
             value = self._redis_client.get(user_key)
-            if value == b"1":
+            if value == RAW_TRUE:
                 return True
+            elif value == RAW_FALSE:
+                return False
 
         return super().is_active()
 
+    @cached_property
+    def _track_key_users(self):
+        return f"{self.__class__.__name__.upper()}:track:users"
+
+    def _track_user(self, key):
+        self._redis_client.sadd(self._track_key_users, key)
+
     def clear_user(self) -> None:
-        self._redis_client.delete(self.user_key)
+        uk = self.user_key
+        self._redis_client.delete(uk)
+        self._redis_client.srem(self._track_key_users, uk)
+
+    def clear_all_users(self) -> None:
+        keys = self._redis_client.smembers(self._track_key_users)
+        if keys:
+            self._redis_client.delete(*keys)
 
     def disable_user(self) -> None:
-        self._redis_client.set(self.user_key, 0)
+        uk = self.user_key
+        self._track_user(uk)
+        self._redis_client.set(uk, 0)
 
     def enable_user(self) -> None:
-        self._redis_client.set(self.user_key, 1)
+        uk = self.user_key
+        self._track_user(uk)
+        self._redis_client.set(uk, 1)
 
 
 class Switch(BaseFlag):
