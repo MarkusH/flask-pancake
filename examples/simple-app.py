@@ -1,6 +1,7 @@
 from flask import Flask
-from flask_pancake import FlaskPancake, Switch
 from flask_redis import FlaskRedis
+
+from flask_pancake import FlaskPancake, Switch
 
 app = Flask(__name__)
 pancake = FlaskPancake(app)
