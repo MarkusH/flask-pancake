@@ -29,3 +29,6 @@ def test_switch(app: Flask):
 
     assert off.is_active() is True
     assert on.is_active() is False
+
+    off.clear()
+    assert app.extensions["redis"].get("SWITCH:DEFAULT_OFF") is None

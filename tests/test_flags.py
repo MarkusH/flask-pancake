@@ -63,3 +63,6 @@ def test_flag_user(app: Flask):
 
     assert feature.is_active() is False
     assert app.extensions["redis"].get(f"FLAG:user:{uid2}:FEATURE") == RAW_FALSE
+
+    feature.clear()
+    assert app.extensions["redis"].get("SAMPLE:FEATURE") is None

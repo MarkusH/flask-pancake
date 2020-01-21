@@ -208,4 +208,8 @@ class Sample(AbstractFlag[float]):
         return random.uniform(0, 100) <= float(value)
 
     def set(self, value: float) -> None:
+        if not (0 <= value <= 100):
+            raise ValueError(
+                f"Value for sample {self.name} must be in the range [0, 100]."
+            )
         self._redis_client.set(self.key, value)
