@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import abc
 import random
-from typing import TYPE_CHECKING, Dict, Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 
 from cached_property import cached_property
 from flask import current_app
 
 from .constants import EXTENSION_NAME, RAW_FALSE, RAW_TRUE
+from .registry import registry
 
 if TYPE_CHECKING:
     from flask_redis import FlaskRedis
@@ -20,24 +21,25 @@ __all__ = ["Flag", "Sample", "Switch"]
 
 DEFAULT_TYPE = TypeVar("DEFAULT_TYPE")
 
-_FLAGS: Dict[str, Flag] = {}
-_SWITCHES: Dict[str, Switch] = {}
-_SAMPLES: Dict[str, Sample] = {}
-
 
 class AbstractFlag(abc.ABC, Generic[DEFAULT_TYPE]):
     name: str
+    default: DEFAULT_TYPE
+    extension: str
 
-    def __init__(self, name: str, default: DEFAULT_TYPE) -> None:
+    def __init__(
+        self, name: str, default: DEFAULT_TYPE, extension: Optional[str] = None
+    ) -> None:
         self.name = name
         self.set_default(default)
+        self.extension = extension if extension is not None else EXTENSION_NAME
 
         if isinstance(self, Flag):
-            _FLAGS[name.upper()] = self
+            registry.register_flag(self)
         elif isinstance(self, Switch):
-            _SWITCHES[name.upper()] = self
+            registry.register_switch(self)
         elif isinstance(self, Sample):
-            _SAMPLES[name.upper()] = self
+            registry.register_sample(self)
 
     def set_default(self, default: DEFAULT_TYPE) -> None:
         self.default = default

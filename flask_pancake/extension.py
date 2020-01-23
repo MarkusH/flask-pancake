@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Callable, Dict, Optional, Union
 from cached_property import cached_property
 
 from .constants import EXTENSION_NAME
-from .flags import _FLAGS, _SAMPLES, _SWITCHES
+from .registry import registry
 from .utils import import_from_string
 
 if TYPE_CHECKING:
@@ -21,11 +21,13 @@ class FlaskPancake:
         self,
         app: Flask = None,
         *,
+        name: str = EXTENSION_NAME,
         redis_extension_name: str = "redis",
         get_user_id_func: Optional[Union[str, Callable[[], str]]] = None,
     ) -> None:
         self.redis_extension_name = redis_extension_name
         self._get_user_id_func = get_user_id_func
+        self.name = name
 
         self.app = app
         if app is not None:
@@ -42,12 +44,12 @@ class FlaskPancake:
 
     @property
     def flags(self) -> Dict[str, Flag]:
-        return _FLAGS
+        return registry.flags(self.name)
 
     @property
     def switches(self) -> Dict[str, Switch]:
-        return _SWITCHES
+        return registry.switches(self.name)
 
     @property
     def samples(self) -> Dict[str, Sample]:
-        return _SAMPLES
+        return registry.samples(self.name)
