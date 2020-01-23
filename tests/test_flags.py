@@ -3,7 +3,8 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from flask_pancake import EXTENSION_NAME, RAW_FALSE, RAW_TRUE, Flag
+from flask_pancake import Flag
+from flask_pancake.constants import EXTENSION_NAME, RAW_FALSE, RAW_TRUE
 
 if TYPE_CHECKING:
     from flask import Flask

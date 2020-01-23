@@ -2,7 +2,8 @@ import pytest
 from flask import Flask
 from flask_redis import FlaskRedis
 
-from flask_pancake import EXTENSION_NAME, FlaskPancake
+from flask_pancake import FlaskPancake
+from flask_pancake.constants import EXTENSION_NAME
 
 
 @pytest.fixture

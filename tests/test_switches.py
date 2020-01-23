@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from flask_pancake import RAW_FALSE, RAW_TRUE, Switch
+from flask_pancake import Switch
+from flask_pancake.constants import RAW_FALSE, RAW_TRUE
 
 if TYPE_CHECKING:
     from flask import Flask
