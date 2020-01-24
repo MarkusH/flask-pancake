@@ -34,7 +34,7 @@ class FlaskPancake:
             self.init_app(app)
 
     def init_app(self, app: Flask) -> None:
-        app.extensions[EXTENSION_NAME] = self
+        app.extensions[self.name] = self
 
     @cached_property
     def get_user_id_func(self) -> Optional[Callable[[], str]]:

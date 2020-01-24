@@ -46,7 +46,7 @@ class AbstractFlag(abc.ABC, Generic[DEFAULT_TYPE]):
 
     @cached_property
     def ext(self) -> "FlaskPancake":
-        return current_app.extensions[EXTENSION_NAME]
+        return current_app.extensions[self.extension]
 
     @cached_property
     def _redis_client(self) -> FlaskRedis:
@@ -54,7 +54,10 @@ class AbstractFlag(abc.ABC, Generic[DEFAULT_TYPE]):
 
     @cached_property
     def key(self) -> str:
-        return f"{self.__class__.__name__.upper()}:{self.name.upper()}"
+        extension = ""
+        if self.extension != EXTENSION_NAME:
+            extension = f":{self.extension}"
+        return f"{self.__class__.__name__.upper()}:{self.name.upper()}{extension}"
 
     @abc.abstractmethod
     def is_active(self) -> bool:

@@ -5,6 +5,8 @@ CHANGELOG
 Unreleased
 ==========
 
+- Added support for multiple ``FlaskPancake`` instances in a single app.
+
 - The format for Redis keys for user flags was changed from
   ``FLAG:user:<uid>:<FLAG_NAME_UPPER>`` to ``FLAG:<FLAG_NAME_UPPER>:user:<uid>``.
 

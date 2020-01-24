@@ -3,7 +3,6 @@ from flask import Flask
 from flask_redis import FlaskRedis
 
 from flask_pancake import FlaskPancake
-from flask_pancake.constants import EXTENSION_NAME
 
 
 @pytest.fixture
@@ -29,16 +28,6 @@ def client(app):
 
 @pytest.fixture(autouse=True)
 def flask_pancake_cleanup(app: Flask):
-    def inner():
-        flask_pancake: FlaskPancake = app.extensions[EXTENSION_NAME]
-        for flag in flask_pancake.flags.values():
-            flag.clear()
-            flag.clear_all_users()
-        for switch in flask_pancake.switches.values():
-            switch.clear()
-        for sample in flask_pancake.samples.values():
-            sample.clear()
-
-    inner()
+    app.extensions["redis"].flushall()
     yield
-    inner()
+    app.extensions["redis"].flushall()

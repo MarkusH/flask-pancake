@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from flask_pancake import Flag
+from flask_pancake import Flag, FlaskPancake
 from flask_pancake.constants import EXTENSION_NAME, RAW_FALSE, RAW_TRUE
 
 if TYPE_CHECKING:
@@ -67,3 +67,19 @@ def test_flag_user(app: Flask):
 
     feature.clear()
     assert app.extensions["redis"].get("SAMPLE:FEATURE") is None
+
+
+def test_key(app: Flask):
+    flag = Flag("my-flag", True)
+    app.extensions[EXTENSION_NAME].get_user_id_func = lambda: "some-uid"
+    assert flag.key == "FLAG:MY-FLAG"
+    assert flag.user_key == "FLAG:MY-FLAG:user:some-uid"
+
+
+def test_scoped_key(app: Flask):
+    FlaskPancake(app, name="scopy")
+    flag = Flag("my-flag", True, extension="scopy")
+    app.extensions[EXTENSION_NAME].get_user_id_func = lambda: "some-uid"
+    app.extensions["scopy"].get_user_id_func = lambda: "scopy-uid"
+    assert flag.key == "FLAG:MY-FLAG:scopy"
+    assert flag.user_key == "FLAG:MY-FLAG:scopy:user:scopy-uid"

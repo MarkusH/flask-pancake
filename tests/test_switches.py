@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from flask_pancake import Switch
+from flask_pancake import FlaskPancake, Switch
 from flask_pancake.constants import RAW_FALSE, RAW_TRUE
 
 if TYPE_CHECKING:
@@ -33,3 +33,14 @@ def test_switch(app: Flask):
 
     off.clear()
     assert app.extensions["redis"].get("SWITCH:DEFAULT_OFF") is None
+
+
+def test_key(app: Flask):
+    switch = Switch("my-switch", True)
+    assert switch.key == "SWITCH:MY-SWITCH"
+
+
+def test_scoped_key(app: Flask):
+    FlaskPancake(app, name="scopy")
+    switch = Switch("my-switch", True, extension="scopy")
+    assert switch.key == "SWITCH:MY-SWITCH:scopy"
