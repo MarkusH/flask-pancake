@@ -100,7 +100,7 @@ class Flag(BaseFlag):
         uid = get_user_id_func()
         if uid is None:
             return None
-        return f"{self.__class__.__name__.upper()}:user:{uid}:{self.name.upper()}"
+        return f"{self.key}:user:{uid}"
 
     def is_active(self) -> bool:
         user_key = self.user_key

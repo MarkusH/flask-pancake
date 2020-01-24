@@ -50,7 +50,7 @@ def test_flag_user(app: Flask):
     assert feature.is_active() is True
 
     assert app.extensions["redis"].get("FLAG:FEATURE") == RAW_FALSE
-    assert app.extensions["redis"].get(f"FLAG:user:{uid1}:FEATURE") == RAW_TRUE
+    assert app.extensions["redis"].get(f"FLAG:FEATURE:user:{uid1}") == RAW_TRUE
 
     app.extensions[EXTENSION_NAME].get_user_id_func = lambda: uid2
     assert feature.is_active() is False
@@ -63,7 +63,7 @@ def test_flag_user(app: Flask):
     feature.disable_user()
 
     assert feature.is_active() is False
-    assert app.extensions["redis"].get(f"FLAG:user:{uid2}:FEATURE") == RAW_FALSE
+    assert app.extensions["redis"].get(f"FLAG:FEATURE:user:{uid2}") == RAW_FALSE
 
     feature.clear()
     assert app.extensions["redis"].get("SAMPLE:FEATURE") is None
