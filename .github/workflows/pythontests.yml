@@ -79,9 +79,7 @@ jobs:
     - name: Setup Redis
       uses: zhulik/redis-action@1.1.0
       with:
-        # Version of Redis to use
         redis version: 5
-        # Number of Redis databases
         number of databases: 2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
@@ -94,3 +92,7 @@ jobs:
     - name: Running py.test
       run: |
         py.test -vvv
+    - name: Upload coverage to codecov.io
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
