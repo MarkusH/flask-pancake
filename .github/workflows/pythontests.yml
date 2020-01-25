@@ -23,7 +23,7 @@ jobs:
         python -m pip install --upgrade pip black
     - name: Running black
       run: |
-        black --target-version py36 --check --diff .
+        black --check --diff .
 
   flake8:
     runs-on: ubuntu-latest
