@@ -1,5 +1,9 @@
 # flask-pancake
 
+![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/MarkusH/flask-pancake/CI/master?style=for-the-badge)
+![Codecov branch](https://img.shields.io/codecov/c/gh/MarkusH/flask-pancake/master?style=for-the-badge)
+![PyPI](https://img.shields.io/pypi/v/flask-pancake?style=for-the-badge)
+
 Feature Flagging for Flask
 
 This library was heavily inspired by
