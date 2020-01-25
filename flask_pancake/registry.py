@@ -33,5 +33,10 @@ class Registry:
     def switches(self, extension: str):
         return self._switches.get(extension, {})
 
+    def __clear__(self):
+        self._flags.clear()
+        self._samples.clear()
+        self._switches.clear()
+
 
 registry = Registry()
