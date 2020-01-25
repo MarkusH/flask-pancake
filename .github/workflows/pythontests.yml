@@ -92,6 +92,7 @@ jobs:
     - name: Running py.test
       run: |
         py.test -vvv
+        coverage xml
     - name: Upload coverage to codecov.io
       uses: codecov/codecov-action@v1
       with:
