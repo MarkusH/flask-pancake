@@ -21,12 +21,6 @@ def app(_app):
         yield _app
 
 
-@pytest.fixture
-def client(app):
-    with app.test_client() as client:
-        yield client
-
-
 @pytest.fixture(autouse=True)
 def flask_pancake_cleanup(app: Flask):
     app.extensions["redis"].flushall()

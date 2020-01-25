@@ -79,7 +79,6 @@ def test_key(app: Flask):
 def test_scoped_key(app: Flask):
     FlaskPancake(app, name="scopy")
     flag = Flag("my-flag", True, extension="scopy")
-    app.extensions[EXTENSION_NAME].get_user_id_func = lambda: "some-uid"
     app.extensions["scopy"].get_user_id_func = lambda: "scopy-uid"
     assert flag.key == "FLAG:MY-FLAG:scopy"
     assert flag.user_key == "FLAG:MY-FLAG:scopy:user:scopy-uid"
