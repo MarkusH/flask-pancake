@@ -16,13 +16,13 @@ class Registry:
         self._switches: Dict[str, Dict[str, Switch]] = {}
 
     def register_flag(self, flag: Flag) -> None:
-        self._flags[flag.extension] = {flag.name: flag}
+        self._flags.setdefault(flag.extension, {})[flag.name] = flag
 
     def register_sample(self, sample: Sample) -> None:
-        self._samples[sample.extension] = {sample.name: sample}
+        self._samples.setdefault(sample.extension, {})[sample.name] = sample
 
     def register_switch(self, switch: Switch) -> None:
-        self._switches[switch.extension] = {switch.name: switch}
+        self._switches.setdefault(switch.extension, {})[switch.name] = switch
 
     def flags(self, extension: str):
         return self._flags.get(extension, {})
