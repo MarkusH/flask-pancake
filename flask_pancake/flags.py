@@ -56,7 +56,7 @@ class AbstractFlag(abc.ABC, Generic[DEFAULT_TYPE]):
 
     @abc.abstractmethod
     def is_active(self) -> bool:
-        ...
+        raise NotImplementedError  # pragma: no cover
 
     def clear(self) -> None:
         self._redis_client.delete(self.key)
@@ -66,7 +66,8 @@ class BaseFlag(AbstractFlag[bool], abc.ABC):
     def set_default(self, default: bool) -> None:
         if int(default) not in {0, 1}:
             raise ValueError(
-                f"Default value for switch {self.name} must be True or False."
+                f"Default value for {self.__class__.__name__.lower()} {self.name} "
+                f"must be True or False."
             )
         super().set_default(default)
 
@@ -128,6 +129,7 @@ class Flag(BaseFlag):
     def clear_all_users(self) -> None:
         keys = self._redis_client.smembers(self._track_key_users)
         if keys:
+            self._redis_client.srem(self._track_key_users, *keys)
             self._redis_client.delete(*keys)
 
     def disable_user(self) -> None:

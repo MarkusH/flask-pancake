@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
+
 from flask_pancake import FlaskPancake, Switch
 from flask_pancake.constants import RAW_FALSE, RAW_TRUE
 
@@ -44,3 +46,10 @@ def test_scoped_key(app: Flask):
     FlaskPancake(app, name="scopy")
     switch = Switch("my-switch", True, extension="scopy")
     assert switch.key == "SWITCH:MY-SWITCH:scopy"
+
+
+def test_out_of_bounds_default():
+    with pytest.raises(
+        ValueError, match=r"Default value for switch X must be True or False\.",
+    ):
+        Switch("X", 2)
