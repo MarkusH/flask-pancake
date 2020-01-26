@@ -34,12 +34,7 @@ class AbstractFlag(abc.ABC, Generic[DEFAULT_TYPE]):
         self.set_default(default)
         self.extension = extension if extension is not None else EXTENSION_NAME
 
-        if isinstance(self, Flag):
-            registry.register_flag(self)
-        elif isinstance(self, Switch):
-            registry.register_switch(self)
-        elif isinstance(self, Sample):
-            registry.register_sample(self)
+        registry.register(self)
 
     def set_default(self, default: DEFAULT_TYPE) -> None:
         self.default = default

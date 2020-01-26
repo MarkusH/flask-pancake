@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict
-
-if TYPE_CHECKING:
-    from .flags import Flag, Sample, Switch
-
+from typing import Dict
 
 __all__ = ["registry"]
 
@@ -15,14 +11,15 @@ class Registry:
         self._samples: Dict[str, Dict[str, Sample]] = {}
         self._switches: Dict[str, Dict[str, Switch]] = {}
 
-    def register_flag(self, flag: Flag) -> None:
-        self._flags.setdefault(flag.extension, {})[flag.name] = flag
-
-    def register_sample(self, sample: Sample) -> None:
-        self._samples.setdefault(sample.extension, {})[sample.name] = sample
-
-    def register_switch(self, switch: Switch) -> None:
-        self._switches.setdefault(switch.extension, {})[switch.name] = switch
+    def register(self, flag: AbstractFlag) -> None:
+        if isinstance(flag, Flag):
+            self._flags.setdefault(flag.extension, {})[flag.name] = flag
+        elif isinstance(flag, Sample):
+            self._samples.setdefault(flag.extension, {})[flag.name] = flag
+        elif isinstance(flag, Switch):
+            self._switches.setdefault(flag.extension, {})[flag.name] = flag
+        else:
+            raise TypeError(f"Cannot register class of type {flag.__class__.__name__}")
 
     def flags(self, extension: str):
         return self._flags.get(extension, {})
@@ -40,3 +37,5 @@ class Registry:
 
 
 registry = Registry()
+
+from .flags import AbstractFlag, Flag, Sample, Switch  # isort:skip # noqa
