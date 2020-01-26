@@ -116,3 +116,7 @@ the `clear()` method.
 Similarly, one can change the persisted state for Flags and Switches using
 their `disable()` and `enable()` methods. Samples can be updated using their
 `set(value: float)` method.
+
+When using `Flag`s, there are `clear_user()` and `clear_all_users()` methods,
+to clear the state for the current or all users. Along the same line, there are
+`disable_user()` and `enable_user()` to set the current user's state.
