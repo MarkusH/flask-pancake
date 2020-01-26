@@ -5,6 +5,9 @@ CHANGELOG
 Unreleased
 ==========
 
+0.2.0 - 2020-01-26
+==================
+
 - Added support for multiple ``FlaskPancake`` instances in a single app. To use
   this, pass an additional ``name`` argument when creating a ``FlaskPancake``
   instance.
