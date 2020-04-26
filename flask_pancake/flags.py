@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from flask_redis import FlaskRedis
 
     from .extension import FlaskPancake
+    from .utils import GroupFunc
 
 
 __all__ = ["Flag", "Sample", "Switch"]
@@ -111,14 +112,17 @@ class Flag(BaseFlag):
         r = self._keys[group_id] = (object_key, tracking_key)
         return r
 
-    def _get_object_key(self, group_id: str, *, func=None):
+    def _get_object_key(
+        self, group_id: str, *, func: GroupFunc = None, object_id: str = None
+    ):
         object_key_prefix, _ = self._get_group_keys(group_id)
-        if func is None:
-            func = self.ext.group_funcs[group_id]
-        obj_id = func()
-        if obj_id is None:
+        if object_id is None:
+            if func is None:
+                func = self.ext.group_funcs[group_id]
+            object_id = func()
+        if object_id is None:
             return None
-        return f"{object_key_prefix}:{obj_id}"
+        return f"{object_key_prefix}:{object_id}"
 
     def is_active(self) -> bool:
         if self.ext.group_funcs:
@@ -136,8 +140,8 @@ class Flag(BaseFlag):
     def _track_object(self, group_id: str, object_key: str):
         self._redis_client.sadd(self._get_group_keys(group_id)[1], object_key)
 
-    def clear_group(self, group_id: str):
-        object_key = self._get_object_key(group_id)
+    def clear_group(self, group_id: str, *, object_id: str = None):
+        object_key = self._get_object_key(group_id, object_id=object_id)
         if object_key is None:
             raise RuntimeError(f"Cannot derive identifier for group '{group_id}'")
         self._redis_client.delete(object_key)
@@ -150,15 +154,15 @@ class Flag(BaseFlag):
             self._redis_client.delete(*object_keys)
             self._redis_client.srem(tracking_key, *object_keys)
 
-    def disable_group(self, group_id: str) -> None:
-        object_key = self._get_object_key(group_id)
+    def disable_group(self, group_id: str, *, object_id: str = None) -> None:
+        object_key = self._get_object_key(group_id, object_id=object_id)
         if object_key is None:
             raise RuntimeError(f"Cannot derive identifier for group '{group_id}'")
         self._track_object(group_id, object_key)
         self._redis_client.set(object_key, 0)
 
-    def enable_group(self, group_id: str) -> None:
-        object_key = self._get_object_key(group_id)
+    def enable_group(self, group_id: str, *, object_id: str = None) -> None:
+        object_key = self._get_object_key(group_id, object_id=object_id)
         if object_key is None:
             raise RuntimeError(f"Cannot derive identifier for group '{group_id}'")
         self._track_object(group_id, object_key)

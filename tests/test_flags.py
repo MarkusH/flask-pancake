@@ -80,7 +80,7 @@ def test_clear_group(app):
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: uid}
     feature = Flag("FEATURE", True)
     object_key = f"FLAG:pancake:k:user:FEATURE:{uid}"
-    tracking_key = f"FLAG:pancake:t:user:FEATURE"
+    tracking_key = "FLAG:pancake:t:user:FEATURE"
 
     assert app.extensions["redis"].get(object_key) is None
     assert app.extensions["redis"].smembers(tracking_key) == set()
@@ -112,7 +112,7 @@ def test_clear_all_group(app):
     feature = Flag("FEATURE", False)
     object_key1 = f"FLAG:pancake:k:user:FEATURE:{uid1}"
     object_key2 = f"FLAG:pancake:k:user:FEATURE:{uid2}"
-    tracking_key = f"FLAG:pancake:t:user:FEATURE"
+    tracking_key = "FLAG:pancake:t:user:FEATURE"
 
     assert app.extensions["redis"].smembers(tracking_key) == set()
     feature.clear_all_group("user")
@@ -142,7 +142,7 @@ def test_disable_group(app):
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: uid}
     feature = Flag("FEATURE", True)
     object_key = f"FLAG:pancake:k:user:FEATURE:{uid}"
-    tracking_key = f"FLAG:pancake:t:user:FEATURE"
+    tracking_key = "FLAG:pancake:t:user:FEATURE"
 
     assert app.extensions["redis"].get(object_key) is None
     assert app.extensions["redis"].smembers(tracking_key) == set()
@@ -168,7 +168,7 @@ def test_enable_group(app):
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: uid}
     feature = Flag("FEATURE", False)
     object_key = f"FLAG:pancake:k:user:FEATURE:{uid}"
-    tracking_key = f"FLAG:pancake:t:user:FEATURE"
+    tracking_key = "FLAG:pancake:t:user:FEATURE"
 
     assert app.extensions["redis"].get(object_key) is None
     assert app.extensions["redis"].smembers(tracking_key) == set()
@@ -187,6 +187,45 @@ def test_enable_group_cannot_derive(app):
 
     with pytest.raises(RuntimeError, match="Cannot derive identifier for group 'user'"):
         feature.enable_group("user")
+
+
+def test_clear_disable_enable_group_object_id(app):
+    app.extensions[EXTENSION_NAME]._group_funcs = {"user": None}
+    feature = Flag("FEATURE", True)
+    object_key1 = "FLAG:pancake:k:user:FEATURE:1"
+    object_key2 = "FLAG:pancake:k:user:FEATURE:2"
+    tracking_key = "FLAG:pancake:t:user:FEATURE"
+
+    assert app.extensions["redis"].get(object_key1) is None
+    assert app.extensions["redis"].get(object_key2) is None
+    assert app.extensions["redis"].smembers(tracking_key) == set()
+
+    feature.enable_group("user", object_id="1")
+    feature.enable_group("user", object_id="2")
+
+    assert app.extensions["redis"].get(object_key1) == RAW_TRUE
+    assert app.extensions["redis"].get(object_key2) == RAW_TRUE
+    assert app.extensions["redis"].smembers(tracking_key) == {
+        object_key1.encode(),
+        object_key2.encode(),
+    }
+
+    feature.disable_group("user", object_id="1")
+    feature.disable_group("user", object_id="2")
+
+    assert app.extensions["redis"].get(object_key1) == RAW_FALSE
+    assert app.extensions["redis"].get(object_key2) == RAW_FALSE
+    assert app.extensions["redis"].smembers(tracking_key) == {
+        object_key1.encode(),
+        object_key2.encode(),
+    }
+
+    feature.clear_group("user", object_id="1")
+    feature.clear_group("user", object_id="2")
+
+    assert app.extensions["redis"].get(object_key1) is None
+    assert app.extensions["redis"].get(object_key2) is None
+    assert app.extensions["redis"].smembers(tracking_key) == set()
 
 
 @pytest.mark.parametrize(
