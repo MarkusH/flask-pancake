@@ -17,14 +17,31 @@ def test_late_init():
     assert "omlet" in app.extensions
 
 
-def some_func():
+def func1():
     pass  # pragma: no cover
 
 
-@pytest.mark.parametrize("func", [some_func, "tests.test_extension:some_func"])
-def test_get_user_id_func(func):
-    pancake = FlaskPancake(get_user_id_func=func)
-    assert pancake.get_user_id_func is some_func
+def func2():
+    pass  # pragma: no cover
+
+
+@pytest.mark.parametrize(
+    "funcs, expected",
+    [
+        ({"a": "tests.test_extension:func1"}, {"a": func1}),
+        (
+            {"a": "tests.test_extension:func1", "b": "tests.test_extension:func2"},
+            {"a": func1, "b": func2},
+        ),
+        (
+            {"b": "tests.test_extension:func2", "a": "tests.test_extension:func1"},
+            {"b": func2, "a": func1},
+        ),
+    ],
+)
+def test_get_user_id_func(funcs, expected):
+    pancake = FlaskPancake(group_funcs=funcs)
+    assert pancake.group_funcs == expected
 
 
 def test_flags_samples_switches():

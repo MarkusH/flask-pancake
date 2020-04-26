@@ -19,12 +19,10 @@ def test_import_from_string_attr_not_found():
         assert import_from_string("tests.test_utils:DOES_NOT_EXIST")
 
 
-def test_import_from_string_module():
-    from tests import test_utils
-
-    assert import_from_string("tests.test_utils") is test_utils
-
-
-def test_import_from_string_module_not_found():
-    with pytest.raises(ModuleNotFoundError):
-        assert import_from_string("flask_pancake.DOES_NOT_EXIST")
+def test_import_from_string_invalid_format():
+    msg = (
+        "Invalid function reference 'tests.test_utils'. The "
+        "format is `path.to.module:function`"
+    )
+    with pytest.raises(ValueError, match=msg):
+        import_from_string("tests.test_utils")

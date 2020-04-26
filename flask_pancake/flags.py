@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 import random
-from typing import TYPE_CHECKING, Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, Dict, Generic, Optional, Tuple, TypeVar
 
 from cached_property import cached_property
 from flask import current_app
@@ -39,20 +39,17 @@ class AbstractFlag(abc.ABC, Generic[DEFAULT_TYPE]):
     def set_default(self, default: DEFAULT_TYPE) -> None:
         self.default = default
 
-    @cached_property
+    @property
     def ext(self) -> "FlaskPancake":
         return current_app.extensions[self.extension]
 
-    @cached_property
+    @property
     def _redis_client(self) -> FlaskRedis:
         return current_app.extensions[self.ext.redis_extension_name]
 
     @cached_property
     def key(self) -> str:
-        extension = ""
-        if self.extension != EXTENSION_NAME:
-            extension = f":{self.extension}"
-        return f"{self.__class__.__name__.upper()}:{self.name.upper()}{extension}"
+        return f"{self.__class__.__name__.upper()}:{self.extension}:{self.name.upper()}"
 
     @abc.abstractmethod
     def is_active(self) -> bool:
@@ -89,58 +86,83 @@ class Flag(BaseFlag):
     Flags are active (or not) on a per-request / user basis.
     """
 
-    @property
-    def user_key(self) -> Optional[str]:
-        get_user_id_func = self.ext.get_user_id_func
-        if get_user_id_func is None:
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._keys: Dict[str, Tuple[str, str]] = {}
+
+    def _get_group_keys(self, group_id: str) -> Tuple[str, str]:
+        if group_id in self._keys:
+            return self._keys[group_id]
+        if self.ext.group_funcs is None:
             raise RuntimeError(
-                "No get_user_id_func defined on FlaskPancake. If you don't "
-                "have users in your application and want a global flag to "
-                "turn things on and off, use a `Switch` instead."
+                f"No group_funcs defined on FlaskPancake extension '{self.extension}'. "
+                "If you don't have users or other types of groups in your application "
+                "and want a global flag to turn things on and off, use a `Switch` "
+                "instead."
             )
-        uid = get_user_id_func()
-        if uid is None:
+        if group_id not in self.ext.group_funcs:
+            raise RuntimeError(
+                f"Invalid group identifer '{group_id}'. This group doesn't seem to be "
+                f"registered in the FlaskPancake extension '{self.extension}'."
+            )
+
+        object_key = f"FLAG:{self.extension}:k:{group_id}:{self.name.upper()}"
+        tracking_key = f"FLAG:{self.extension}:t:{group_id}:{self.name.upper()}"
+        r = self._keys[group_id] = (object_key, tracking_key)
+        return r
+
+    def _get_object_key(self, group_id: str, *, func=None):
+        object_key_prefix, _ = self._get_group_keys(group_id)
+        if func is None:
+            func = self.ext.group_funcs[group_id]
+        obj_id = func()
+        if obj_id is None:
             return None
-        return f"{self.key}:user:{uid}"
+        return f"{object_key_prefix}:{obj_id}"
 
     def is_active(self) -> bool:
-        user_key = self.user_key
-        if user_key is not None:
-            value = self._redis_client.get(user_key)
-            if value == RAW_TRUE:
-                return True
-            elif value == RAW_FALSE:
-                return False
+        if self.ext.group_funcs:
+            for group_id, func in self.ext.group_funcs.items():
+                object_key = self._get_object_key(group_id, func=func)
+                if object_key is not None:
+                    value = self._redis_client.get(object_key)
+                    if value == RAW_TRUE:
+                        return True
+                    elif value == RAW_FALSE:
+                        return False
 
         return super().is_active()
 
-    @cached_property
-    def _track_key_users(self):
-        return f"{self.__class__.__name__.upper()}:track:users"
+    def _track_object(self, group_id: str, object_key: str):
+        self._redis_client.sadd(self._get_group_keys(group_id)[1], object_key)
 
-    def _track_user(self, key):
-        self._redis_client.sadd(self._track_key_users, key)
+    def clear_group(self, group_id: str):
+        object_key = self._get_object_key(group_id)
+        if object_key is None:
+            raise RuntimeError(f"Cannot derive identifier for group '{group_id}'")
+        self._redis_client.delete(object_key)
+        self._redis_client.srem(self._get_group_keys(group_id)[1], object_key)
 
-    def clear_user(self) -> None:
-        uk = self.user_key
-        self._redis_client.delete(uk)
-        self._redis_client.srem(self._track_key_users, uk)
+    def clear_all_group(self, group_id: str) -> None:
+        _, tracking_key = self._get_group_keys(group_id)
+        object_keys = self._redis_client.smembers(tracking_key)
+        if object_keys:
+            self._redis_client.delete(*object_keys)
+            self._redis_client.srem(tracking_key, *object_keys)
 
-    def clear_all_users(self) -> None:
-        keys = self._redis_client.smembers(self._track_key_users)
-        if keys:
-            self._redis_client.srem(self._track_key_users, *keys)
-            self._redis_client.delete(*keys)
+    def disable_group(self, group_id: str) -> None:
+        object_key = self._get_object_key(group_id)
+        if object_key is None:
+            raise RuntimeError(f"Cannot derive identifier for group '{group_id}'")
+        self._track_object(group_id, object_key)
+        self._redis_client.set(object_key, 0)
 
-    def disable_user(self) -> None:
-        uk = self.user_key
-        self._track_user(uk)
-        self._redis_client.set(uk, 0)
-
-    def enable_user(self) -> None:
-        uk = self.user_key
-        self._track_user(uk)
-        self._redis_client.set(uk, 1)
+    def enable_group(self, group_id: str) -> None:
+        object_key = self._get_object_key(group_id)
+        if object_key is None:
+            raise RuntimeError(f"Cannot derive identifier for group '{group_id}'")
+        self._track_object(group_id, object_key)
+        self._redis_client.set(object_key, 1)
 
 
 class Switch(BaseFlag):
@@ -170,6 +192,9 @@ class Sample(AbstractFlag[float]):
         self._redis_client.setnx(self.key, self.default)
         value = self._redis_client.get(self.key)
         return random.uniform(0, 100) <= float(value)
+
+    # def clear(self) -> None:
+    #     self._redis_client.delete(self.key)
 
     def set(self, value: float) -> None:
         if not (0 <= value <= 100):
