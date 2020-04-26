@@ -5,6 +5,9 @@ CHANGELOG
 Unreleased
 ==========
 
+0.3.0 - 2020-04-26
+==================
+
 - BREAKING: Added ability for multiple different groups in ``Flag``\s. This
   provides the ability to e.g. enable a flag for all admins and developers, for
   while disabling if for everyone else.
