@@ -30,4 +30,5 @@ setuptools.setup(
         "Topic :: Software Development :: Testing",
     ],
     python_requires=">=3.7",
+    entry_points={"flask.commands": ["pancake=flask_pancake.commands:pancake_cli"]},
 )

@@ -5,6 +5,24 @@ CHANGELOG
 Unreleased
 ==========
 
+- Added Flask CLI commands to manage flags, samples, and switches. Check out
+  ``flask pancake --help``:
+
+  .. code-block:: console
+
+     $ flask pancake --help
+     Usage: flask pancake [OPTIONS] COMMAND [ARGS]...
+
+       Commands to manage flask-pancake flags, samples, and switches.
+
+     Options:
+       --help  Show this message and exit.
+
+     Commands:
+       flags
+       samples
+       switches
+
 0.3.0 - 2020-04-26
 ==================
 
