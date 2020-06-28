@@ -5,6 +5,9 @@ CHANGELOG
 Unreleased
 ==========
 
+0.4.0 - 2020-06-28
+==================
+
 - Added Flask CLI commands to manage flags, samples, and switches. Check out
   ``flask pancake --help``:
 
