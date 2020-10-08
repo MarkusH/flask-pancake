@@ -52,6 +52,7 @@ def test_out_of_bounds_default(value):
 def test_sample_out_of_bounds_set(value):
     sample = Sample("X", 42)
     with pytest.raises(
-        ValueError, match=r"Value for sample X must be in the range \[0, 100\]\.",
+        ValueError,
+        match=r"Value for sample X must be in the range \[0, 100\]\.",
     ):
         sample.set(value)

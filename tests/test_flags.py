@@ -297,7 +297,8 @@ def test_flag_multiple_groups_fallback(app: Flask):
 
 def test_out_of_bounds_default():
     with pytest.raises(
-        ValueError, match=r"Default value for flag X must be True or False\.",
+        ValueError,
+        match=r"Default value for flag X must be True or False\.",
     ):
         Flag("X", -1)
 
