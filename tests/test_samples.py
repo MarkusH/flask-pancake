@@ -24,6 +24,9 @@ def test_sample(app: Flask):
         feature.set(10)
         assert feature.is_active() is False
 
+    assert app.extensions["redis"].set("SAMPLE:pancake:FEATURE", b"13")
+    assert feature.get() == 13
+
     feature.clear()
     assert app.extensions["redis"].get("SAMPLE:pancake:FEATURE") is None
 

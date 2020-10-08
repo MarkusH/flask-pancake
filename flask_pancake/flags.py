@@ -211,12 +211,12 @@ class Sample(AbstractFlag[float]):
         super().set_default(default)
 
     def is_active(self) -> bool:
+        return random.uniform(0, 100) <= float(self.get())
+
+    def get(self) -> float:
         self._redis_client.setnx(self.key, self.default)
         value = self._redis_client.get(self.key)
-        return random.uniform(0, 100) <= float(value)
-
-    # def clear(self) -> None:
-    #     self._redis_client.delete(self.key)
+        return float(value)
 
     def set(self, value: float) -> None:
         if not (0 <= value <= 100):

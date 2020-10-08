@@ -55,7 +55,7 @@ def test_flags_group(app):
     )
 
     result = runner.invoke(flag_list_group, ["user", uid])
-    assert result.output == "FEATURE: True\n"
+    assert result.output == "FEATURE: Yes (default: No)\n"
 
     result = runner.invoke(flag_disable_group, args=["FEATURE", "user", uid])
     assert feature.is_active() is False
@@ -72,6 +72,9 @@ def test_flags_group(app):
         f"Object '{uid}' in group 'user' for flag 'FEATURE' cleared." in result.output
     )
 
+    result = runner.invoke(flag_list_group, ["user", uid])
+    assert result.output == "FEATURE: N/A (default: No)\n"
+
 
 def test_flag_list(app):
     runner = app.test_cli_runner()
@@ -80,7 +83,11 @@ def test_flag_list(app):
     Flag("FEATURE2", default=False)
 
     result = runner.invoke(flag_list)
-    assert result.output == "FEATURE1: False\nFEATURE2: False\nFEATURE3: True\n"
+    assert result.output == (
+        "FEATURE1: No (default: No)\n"
+        "FEATURE2: No (default: No)\n"
+        "FEATURE3: Yes (default: Yes)\n"
+    )
 
 
 def test_sample(app):
@@ -114,7 +121,11 @@ def test_sample_list(app):
     Sample("SAMPLE2", default=3)
 
     result = runner.invoke(sample_list)
-    assert result.output == "SAMPLE1: 1\nSAMPLE2: 3\nSAMPLE3: 2\n"
+    assert result.output == (
+        "SAMPLE1: 1.0 (default: 1)\n"
+        "SAMPLE2: 3.0 (default: 3)\n"
+        "SAMPLE3: 2.0 (default: 2)\n"
+    )
 
 
 def test_switch(app):
@@ -144,4 +155,8 @@ def test_switch_list(app):
     Switch("SWITCH2", default=False)
 
     result = runner.invoke(switch_list)
-    assert result.output == "SWITCH1: False\nSWITCH2: False\nSWITCH3: True\n"
+    assert result.output == (
+        "SWITCH1: No (default: No)\n"
+        "SWITCH2: No (default: No)\n"
+        "SWITCH3: Yes (default: Yes)\n"
+    )
