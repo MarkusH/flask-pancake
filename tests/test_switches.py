@@ -50,6 +50,7 @@ def test_scoped_key(app: Flask):
 
 def test_out_of_bounds_default():
     with pytest.raises(
-        ValueError, match=r"Default value for switch X must be True or False\.",
+        ValueError,
+        match=r"Default value for switch X must be True or False\.",
     ):
         Switch("X", 2)

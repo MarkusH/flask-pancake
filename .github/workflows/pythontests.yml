@@ -51,7 +51,7 @@ jobs:
         python -m pip install --upgrade pip isort
     - name: Running isort
       run: |
-        isort --check-only --diff --recursive
+        isort --check --diff .
 
   mypy:
     runs-on: ubuntu-latest
