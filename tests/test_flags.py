@@ -79,6 +79,23 @@ def test_enable(app):
     assert feature.is_active() is True
 
 
+def test_is_active_group(app):
+    app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: "1"}
+    feature = Flag("FEATURE", False)
+
+    assert not feature.is_active_group("user")
+    feature.enable_group("user")
+    assert feature.is_active_group("user")
+
+
+def test_is_active_group_cannot_derive(app):
+    app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: None}
+    feature = Flag("FEATURE", True)
+
+    with pytest.raises(RuntimeError, match="Cannot derive identifier for group 'user'"):
+        feature.is_active_group("user")
+
+
 def test_clear_group(app):
     uid = str(uuid.uuid4())
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: uid}
@@ -274,15 +291,24 @@ def test_flag_multiple_groups(default, group, user, expected, app: Flask):
 
     feature = Flag("FEATURE", default)
 
+    if default is True:
+        assert feature.is_active_globally()
+    else:
+        assert not feature.is_active_globally()
+
     if group is True:
         feature.enable_group("group")
+        assert feature.is_active_group("group")
     elif group is False:
         feature.disable_group("group")
+        assert not feature.is_active_group("group")
 
     if user is True:
         feature.enable_group("user")
+        assert feature.is_active_group("user")
     elif user is False:
         feature.disable_group("user")
+        assert not feature.is_active_group("user")
 
     assert feature.is_active() is expected
 

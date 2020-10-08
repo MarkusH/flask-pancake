@@ -83,6 +83,16 @@ def flag_list(extension):
         click.echo(f"{name}: {instance.default}")
 
 
+@flags_cli.command("list-group")
+@click.option("--extension", default=EXTENSION_NAME)
+@click.argument("group")
+@click.argument("id")
+def flag_list_group(extension, group, id):
+    for name, instance in sorted(current_app.extensions[extension].flags.items()):
+        value = instance.is_active_group(group_id=group, object_id=id)
+        click.echo(f"{name}: {value}")
+
+
 # SAMPLES
 
 

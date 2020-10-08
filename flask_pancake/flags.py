@@ -135,7 +135,25 @@ class Flag(BaseFlag):
                     elif value == RAW_FALSE:
                         return False
 
+        return self.is_active_globally()
+
+    def is_active_globally(self) -> bool:
         return super().is_active()
+
+    def is_active_group(
+        self, group_id: str, *, object_id: str = None
+    ) -> Optional[bool]:
+        object_key = self._get_object_key(group_id, object_id=object_id)
+        if object_key is None:
+            raise RuntimeError(f"Cannot derive identifier for group '{group_id}'")
+        value = self._redis_client.get(object_key)
+
+        if value == RAW_TRUE:
+            return True
+        elif value == RAW_FALSE:
+            return False
+
+        return None
 
     def _track_object(self, group_id: str, object_key: str):
         self._redis_client.sadd(self._get_group_keys(group_id)[1], object_key)

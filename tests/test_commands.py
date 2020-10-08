@@ -10,6 +10,7 @@ from flask_pancake.commands import (
     flag_enable,
     flag_enable_group,
     flag_list,
+    flag_list_group,
     sample_clear,
     sample_list,
     sample_set,
@@ -52,6 +53,9 @@ def test_flags_group(app):
     assert (
         f"Object '{uid}' in group 'user' for flag 'FEATURE' enabled." in result.output
     )
+
+    result = runner.invoke(flag_list_group, ["user", uid])
+    assert result.output == "FEATURE: True\n"
 
     result = runner.invoke(flag_disable_group, args=["FEATURE", "user", uid])
     assert feature.is_active() is False
