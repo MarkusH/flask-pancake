@@ -1,10 +1,10 @@
 import importlib
 from typing import Callable
 
-GroupFunc = Callable[[], str]
+GroupFuncType = Callable[[], str]
 
 
-def import_from_string(fqn: str) -> GroupFunc:
+def import_from_string(fqn: str) -> GroupFuncType:
     if fqn.count(":") != 1:
         raise ValueError(
             f"Invalid function reference '{fqn}'. The format is "

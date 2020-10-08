@@ -1,8 +1,9 @@
 import pytest
 from flask import Flask
 
-from flask_pancake import Flag, FlaskPancake, Sample, Switch
+from flask_pancake import Flag, FlaskPancake, GroupFunc, Sample, Switch
 from flask_pancake.constants import EXTENSION_NAME
+from flask_pancake.extension import FunctionGroupFunc
 
 
 def test_late_init():
@@ -25,23 +26,49 @@ def func2():
     pass  # pragma: no cover
 
 
+class MyGroupFunc(GroupFunc):
+    def __init__(self):
+        self._counter = 0
+
+    def __call__(self) -> str:
+        ret = self._counter
+        self._counter = (self._counter + 1) % 3
+        return str(ret)
+
+
 @pytest.mark.parametrize(
     "funcs, expected",
     [
-        ({"a": "tests.test_extension:func1"}, {"a": func1}),
+        ({"a": "tests.test_extension:func1"}, {"a": FunctionGroupFunc(func1)}),
         (
             {"a": "tests.test_extension:func1", "b": "tests.test_extension:func2"},
-            {"a": func1, "b": func2},
+            {"a": FunctionGroupFunc(func1), "b": FunctionGroupFunc(func2)},
         ),
         (
             {"b": "tests.test_extension:func2", "a": "tests.test_extension:func1"},
-            {"b": func2, "a": func1},
+            {"b": FunctionGroupFunc(func2), "a": FunctionGroupFunc(func1)},
         ),
     ],
 )
-def test_get_user_id_func(funcs, expected):
+def test_group_funcs_resolving(funcs, expected):
     pancake = FlaskPancake(group_funcs=funcs)
+    assert pancake.group_funcs
     assert pancake.group_funcs == expected
+
+
+def test_group_funcs_resolving_class():
+    pancake = FlaskPancake(group_funcs={"a": "tests.test_extension:MyGroupFunc"})
+    func = pancake.group_funcs["a"]
+    assert isinstance(func, MyGroupFunc)
+    assert [func(), func(), func(), func()] == ["0", "1", "2", "0"]
+
+
+def test_group_funcs_resolving_fail():
+    pancake = FlaskPancake(group_funcs={"a": object()})
+    with pytest.raises(
+        ValueError, match=r"Invalid group function <object object at .*> for 'a'\."
+    ):
+        pancake.group_funcs
 
 
 def test_flags_samples_switches():

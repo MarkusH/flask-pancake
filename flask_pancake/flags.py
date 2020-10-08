@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from flask_redis import FlaskRedis
 
     from .extension import FlaskPancake
-    from .utils import GroupFunc
+    from .utils import GroupFuncType
 
 
 __all__ = ["Flag", "Sample", "Switch"]
@@ -113,7 +113,7 @@ class Flag(BaseFlag):
         return r
 
     def _get_object_key(
-        self, group_id: str, *, func: GroupFunc = None, object_id: str = None
+        self, group_id: str, *, func: GroupFuncType = None, object_id: str = None
     ):
         object_key_prefix, _ = self._get_group_keys(group_id)
         if object_id is None:

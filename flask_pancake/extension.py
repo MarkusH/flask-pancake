@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Optional, Union
+import abc
+from typing import TYPE_CHECKING, Callable, Dict, Optional, Type, Union
 
 from cached_property import cached_property
 
 from .constants import EXTENSION_NAME
 from .registry import registry
-from .utils import GroupFunc, import_from_string
+from .utils import GroupFuncType, import_from_string
 
 if TYPE_CHECKING:
     from flask import Flask
@@ -23,7 +24,9 @@ class FlaskPancake:
         *,
         name: str = EXTENSION_NAME,
         redis_extension_name: str = "redis",
-        group_funcs: Optional[Dict[str, Union[str, GroupFunc]]] = None,
+        group_funcs: Optional[
+            Dict[str, Union[str, Type[GroupFunc], GroupFunc, GroupFuncType]]
+        ] = None,
     ) -> None:
         self.redis_extension_name = redis_extension_name
         self._group_funcs = group_funcs
@@ -40,10 +43,20 @@ class FlaskPancake:
     def group_funcs(self) -> Optional[Dict[str, GroupFunc]]:
         if self._group_funcs is None:
             return None
-        return {
-            key: (import_from_string(value) if isinstance(value, str) else value)
-            for key, value in self._group_funcs.items()
-        }
+        ret = {}
+        for key, value in self._group_funcs.items():
+            if isinstance(value, str):
+                value = import_from_string(value)
+            if isinstance(value, type) and issubclass(value, GroupFunc):
+                value = value()
+            if isinstance(value, GroupFunc):
+                ret[key] = value
+            elif callable(value):
+                ret[key] = FunctionGroupFunc(value)
+            else:
+                raise ValueError(f"Invalid group function {value!r} for {key!r}.")
+
+        return ret
 
     @property
     def flags(self) -> Dict[str, Flag]:
@@ -56,3 +69,20 @@ class FlaskPancake:
     @property
     def samples(self) -> Dict[str, Sample]:
         return registry.samples(self.name)
+
+
+class GroupFunc(abc.ABC):
+    @abc.abstractmethod
+    def __call__(self) -> str:
+        ...  # pragma: no cover
+
+
+class FunctionGroupFunc(GroupFunc):
+    def __init__(self, func: Callable[[], str]):
+        self._func = func
+
+    def __call__(self) -> str:
+        return self._func()
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, FunctionGroupFunc) and self._func == other._func

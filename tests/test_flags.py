@@ -12,6 +12,10 @@ if TYPE_CHECKING:
     from flask import Flask
 
 
+def noop():
+    ...  # pragma: no cover
+
+
 def test_flag(app: Flask):
     uid = str(uuid.uuid4())
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: uid}
@@ -190,7 +194,7 @@ def test_enable_group_cannot_derive(app):
 
 
 def test_clear_disable_enable_group_object_id(app):
-    app.extensions[EXTENSION_NAME]._group_funcs = {"user": None}
+    app.extensions[EXTENSION_NAME]._group_funcs = {"user": noop}
     feature = Flag("FEATURE", True)
     object_key1 = "FLAG:pancake:k:user:FEATURE:1"
     object_key2 = "FLAG:pancake:k:user:FEATURE:2"
@@ -316,7 +320,7 @@ def test_get_group_keys_no_groups(app: Flask):
 
 
 def test_get_group_keys_group_not_defined(app: Flask):
-    app.extensions[EXTENSION_NAME]._group_funcs = {"group": None}
+    app.extensions[EXTENSION_NAME]._group_funcs = {"group": noop}
     feature = Flag("FEATURE", False)
     msg = (
         "Invalid group identifer 'user'. This group doesn't seem to be "
