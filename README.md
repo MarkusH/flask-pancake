@@ -151,3 +151,21 @@ When using `Flag`s, there are `clear_group(group_id)` and
 users within a group. Along the same line, there are `disable_group(group_id)`
 and `enable_group(group_id)` to set the group's state the current user is part
 of.
+
+### Web API
+
+`flask-pancake` provides an API endpoint that shows all available flags,
+samples and switches and their corresponding states. It can be enabled by
+registering a Flask blueprint:
+
+```python
+from flask import Flask
+from flask_pancake import blueprint
+
+app = Flask(__name__)
+app.register_blueprint(blueprint, url_prefix="/pancakes")
+```
+
+**WARNING:** The API is not secured in any way! You should use Flask's
+[`Blueprint.before_request()`](https://flask.palletsprojects.com/en/1.1.x/api/?highlight=register_blueprint#flask.Blueprint.before_request)
+feature to add some authentication.

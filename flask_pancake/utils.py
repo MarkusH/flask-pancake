@@ -3,7 +3,7 @@ from typing import Callable, Optional
 
 import click
 
-GroupFuncType = Callable[[], str]
+GroupFuncType = Callable[[], Optional[str]]
 
 
 def import_from_string(fqn: str) -> GroupFuncType:

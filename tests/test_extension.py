@@ -30,10 +30,13 @@ class MyGroupFunc(GroupFunc):
     def __init__(self):
         self._counter = 0
 
-    def __call__(self) -> str:
+    def __call__(self):
         ret = self._counter
         self._counter = (self._counter + 1) % 3
         return str(ret)
+
+    def get_candidate_ids(self):
+        return []  # pragma: no cover
 
 
 @pytest.mark.parametrize(
@@ -97,3 +100,18 @@ def test_flags_samples_switches():
     assert omlet.samples == {"Sample2": sample2}
     assert pancake.switches == {"Switch1": switch1}
     assert omlet.switches == {"Switch2": switch2}
+
+
+def test_function_group_func():
+    vals = ["1", "2", "3", "4"]
+    ret_vals = iter(vals)
+
+    def f():
+        return next(ret_vals)
+
+    fgf = FunctionGroupFunc(f)
+    assert [fgf(), fgf(), fgf(), fgf()] == vals
+    assert fgf.get_candidate_ids() == []
+
+    f.get_candidate_ids = lambda: vals
+    assert fgf.get_candidate_ids() == vals

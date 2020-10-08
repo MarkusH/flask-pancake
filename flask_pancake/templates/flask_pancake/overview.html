@@ -1,0 +1,74 @@
+<h1>Flask Pancake</h1>
+Extension: {{ name }}
+
+<h2>Flags</h2>
+<table border="1">
+  <thead>
+    <th>Name</th>
+    <th>Default</th>
+    <th>Is active globally</th>
+    {%- for group_id in group_ids -%}
+    <th>Is active for <em>{{ group_id }}</em></th>
+    {%- endfor -%}
+  </thead>
+  {%- for flag in flags -%}
+  <tr>
+    <td>{{ flag.name }}</td>
+    <td>{{ flag.default }}</td>
+    <td>{{ flag.is_active }}</td>
+    {%- for group_id in group_ids -%}
+    <td>
+      {%- for object_id, is_active in flag.groups[group_id].items() -%}
+      <p>{{ object_id }}: {{ is_active }}</p>
+      {%- else -%}
+      No candidates available
+      {%- endfor -%}
+    </td>
+    {%- endfor -%}
+  </tr>
+  {%- else -%}
+  <tr>
+    <td colspan="{{3 + (group_ids | length) }}">No flags</td>
+  </tr>
+  {%- endfor -%}
+</table>
+
+<h2>Samples</h2>
+<table border="1">
+  <thead>
+    <th>Name</th>
+    <th>Default</th>
+    <th>Value</th>
+  </thead>
+  {%- for sample in samples -%}
+  <tr>
+    <td>{{ sample.name }}</td>
+    <td>{{ sample.default }}</td>
+    <td>{{ sample.value }}</td>
+  </tr>
+  {%- else -%}
+  <tr>
+    <td colspan="3">No samples</td>
+  </tr>
+  {%- endfor -%}
+</table>
+
+<h2>Switches</h2>
+<table border="1">
+  <thead>
+    <th>Name</th>
+    <th>Default</th>
+    <th>Is Active</th>
+  </thead>
+  {%- for switch in switches -%}
+  <tr>
+    <td>{{ switch.name }}</td>
+    <td>{{ switch.default }}</td>
+    <td>{{ switch.is_active }}</td>
+  </tr>
+  {%- else -%}
+  <tr>
+    <td colspan="3">No switches</td>
+  </tr>
+  {%- endfor -%}
+</table>

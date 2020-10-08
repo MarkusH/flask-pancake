@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Callable, Dict, Optional, Type, Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Type, Union
 
 from cached_property import cached_property
 
@@ -73,16 +73,26 @@ class FlaskPancake:
 
 class GroupFunc(abc.ABC):
     @abc.abstractmethod
-    def __call__(self) -> str:
+    def __call__(self) -> Optional[str]:
+        ...  # pragma: no cover
+
+    @abc.abstractmethod
+    def get_candidate_ids(self) -> List[str]:
         ...  # pragma: no cover
 
 
 class FunctionGroupFunc(GroupFunc):
-    def __init__(self, func: Callable[[], str]):
+    def __init__(self, func: Callable[[], Optional[str]]):
         self._func = func
 
-    def __call__(self) -> str:
+    def __call__(self) -> Optional[str]:
         return self._func()
+
+    def get_candidate_ids(self) -> List[str]:
+        sub_func = getattr(self._func, "get_candidate_ids", None)
+        if sub_func:
+            return sub_func()
+        return []
 
     def __eq__(self, other) -> bool:
         return isinstance(other, FunctionGroupFunc) and self._func == other._func

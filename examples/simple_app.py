@@ -1,9 +1,10 @@
 from flask import Flask
 from flask_redis import FlaskRedis
 
-from flask_pancake import FlaskPancake, Switch
+from flask_pancake import FlaskPancake, Switch, blueprint
 
 app = Flask(__name__)
+app.register_blueprint(blueprint, url_prefix="/pancakes")
 pancake = FlaskPancake(app)
 redis = FlaskRedis(app)
 
