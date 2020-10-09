@@ -1,12 +1,24 @@
 from typing import List
 
-from flask import Flask, g
+from flask import Flask, abort, g, request, url_for
 from flask_redis import FlaskRedis
 
 from flask_pancake import Flag, FlaskPancake, Sample, Switch, blueprint
 from flask_pancake.extension import GroupFunc
 
 app = Flask(__name__)
+
+
+@blueprint.before_request
+def auth():
+    if request.endpoint == "pancake.overview":
+        if "key" in request.args:
+            if request.args["key"] == "secret":
+                return
+            abort(403)
+        abort(401)
+
+
 app.register_blueprint(blueprint, url_prefix="/pancakes")
 
 
@@ -43,7 +55,10 @@ def setup():
 
 @app.route("/")
 def index():
+    overview_url = url_for("pancake.overview")
+    status_url = url_for("pancake.status")
     return (
-        'Check out <a href="/pancakes">a list of all feature flags</a>.',
+        f'Check out <a href="{overview_url}?key=secret">a list of all feature flags</a>'
+        f' and <a href="{status_url}">your current status</a>',
         200,
     )

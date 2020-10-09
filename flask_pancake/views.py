@@ -62,9 +62,31 @@ def aggregate_data(ext: FlaskPancake):
     }
 
 
-@bp.route("/", defaults={"pancake": EXTENSION_NAME})
-@bp.route("/<pancake>")
-def show(pancake):
+def aggregate_is_active_data(ext: FlaskPancake):
+    flags = [
+        {"name": flag.name, "is_active": flag.is_active()}
+        for flag in ext.flags.values()
+    ]
+
+    samples = [
+        {"name": sample.name, "is_active": sample.is_active()}
+        for sample in ext.samples.values()
+    ]
+    switches = [
+        {"name": switch.name, "is_active": switch.is_active()}
+        for switch in ext.switches.values()
+    ]
+
+    return {
+        "flags": flags,
+        "samples": samples,
+        "switches": switches,
+    }
+
+
+@bp.route("/overview", defaults={"pancake": EXTENSION_NAME})
+@bp.route("/overview/<pancake>")
+def overview(pancake):
     ext = current_app.extensions.get(pancake)
     if ext is None or not isinstance(ext, FlaskPancake):
         return "Unknown", 404
@@ -78,3 +100,13 @@ def show(pancake):
             return render_template("flask_pancake/overview.html", **context)
         except TemplateNotFound:  # pragma: no cover
             abort(404)
+
+
+@bp.route("/status", defaults={"pancake": EXTENSION_NAME})
+@bp.route("/status/<pancake>")
+def status(pancake):
+    ext = current_app.extensions.get(pancake)
+    if ext is None or not isinstance(ext, FlaskPancake):
+        return "Unknown", 404
+    context = aggregate_is_active_data(ext)
+    return jsonify(context)

@@ -155,8 +155,10 @@ of.
 ### Web API
 
 `flask-pancake` provides an API endpoint that shows all available flags,
-samples and switches and their corresponding states. It can be enabled by
-registering a Flask blueprint:
+samples and switches and their corresponding states under the `/overview` route
+within the blueprint. It also provides a JSON API to get the status for all
+feature flags for the current user under the `/status` route. The API can be
+enabled by registering a Flask blueprint:
 
 ```python
 from flask import Flask
@@ -168,4 +170,4 @@ app.register_blueprint(blueprint, url_prefix="/pancakes")
 
 **WARNING:** The API is not secured in any way! You should use Flask's
 [`Blueprint.before_request()`](https://flask.palletsprojects.com/en/1.1.x/api/?highlight=register_blueprint#flask.Blueprint.before_request)
-feature to add some authentication.
+feature to add some authentication for the `/overview` endpoint.
