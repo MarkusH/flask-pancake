@@ -5,6 +5,21 @@ CHANGELOG
 Unreleased
 ==========
 
+- Added a JSON API endpoint under ``GET /status`` that exposes which flags,
+  samples, or switches are active for the current user.
+
+- Added an HTML and JSON API endpoint under ``GET /overview`` that shows the
+  status of each flag, sample, or switch, including the status of a flag for
+  each group's object.
+
+- Added support for class-based group functions, which can also expose a set of
+  "candidate IDs". These candidate IDs are used in the new API overview.
+
+- Updated the CLI commands to show the default value when listing flags,
+  samples, or switches.
+
+- Added the ``flask pancake flags list-group`` CLI command.
+
 0.4.0 - 2020-06-28
 ==================
 
