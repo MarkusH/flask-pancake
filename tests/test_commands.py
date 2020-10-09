@@ -1,7 +1,7 @@
 import uuid
 from unittest import mock
 
-from flask.app import Flask
+from flask import Flask, g
 
 from flask_pancake import Flag, Sample, Switch
 from flask_pancake.commands import (
@@ -102,8 +102,14 @@ def test_sample(app: Flask):
     result = runner.invoke(sample_set, ["SAMPLE", "42"])
     assert "Sample 'SAMPLE' set to '42.0'." in result.output
 
+    # Remove the tracked is_active state from `g`:
+    g.pop("pancakes", None)
+
     with mock.patch("random.uniform", return_value=41):
         assert sample.is_active()
+
+    # Remove the tracked is_active state from `g`:
+    g.pop("pancakes", None)
 
     result = runner.invoke(sample_clear, args=["SAMPLE"])
     with mock.patch("random.uniform", return_value=41.999):

@@ -5,6 +5,11 @@ CHANGELOG
 Unreleased
 ==========
 
+- BREAKING: Added persistence of the status of `Sample`s between requests. With
+  this change, checking for a sample within the same request multiple times
+  will yield the same status each time. And to ensure the same status across
+  requests, the status is stored in a cookie.
+
 - Added a JSON API endpoint under ``GET /status`` that exposes which flags,
   samples, or switches are active for the current user.
 

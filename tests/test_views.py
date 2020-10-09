@@ -275,6 +275,7 @@ def test_overview_ext_not_found(app: Flask):
 
 def test_status_json(sample_data_groups, app: Flask):
     app.register_blueprint(blueprint, url_prefix="/p")
+    app.secret_key = "s3cr!t"
     with app.test_client() as client:
         with mock.patch("random.uniform", side_effect=(11, 25)):
             resp = client.get("/p/status", content_type="application/json")

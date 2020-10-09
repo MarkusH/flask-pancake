@@ -24,6 +24,7 @@ from flask_pancake import FlaskPancake, Switch
 from flask_redis import FlaskRedis
 
 app = Flask(__name__)
+app.secret_key = "s3cr!t"
 pancake = FlaskPancake(app)
 redis = FlaskRedis(app)
 
@@ -50,6 +51,7 @@ pancake = FlaskPancake()
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    app.secret_key = "s3cr!t"
     pancake.init_app(app)
     return app
 ```
@@ -64,7 +66,7 @@ def create_app() -> Flask:
   global switch when that service is unavailable.
 
 * `Flag`s are like Switches but can be overridden for individual groups. To
-  make use of Flags, one needs to define at least one function that returns a
+  make use of `Flag`s, one needs to define at least one function that returns a
   group's unique ID or `None`. Groups can be anything that you want users to be
   grouped by: their user ID (which would allow per-user enabling/disabling of
   features), a user's attribute, such as "is_superuser" or "is_staff", or
@@ -88,8 +90,21 @@ def create_app() -> Flask:
       # or "n" if it isn't.
       return getattr(getattr(request, "user", None), "is_superuser", None) and "y" or "n"
 
+  # Alternatively, instead of using `get_group_superuser()` one can use a
+  # slightly more verbose class-based approach which has the added benefit
+  # of adding additional value to the flask-pancake overview API view (see
+  # below).
+  class IsSuperuser(GroupFunc):
+      def __call__(self) -> str:
+          return getattr(getattr(request, "user", None), "is_superuser", None) and "y" or "n"
+
+      def get_candidate_ids(self) -> List[str]:
+          return ["yes", "no"]
+
   pancake = FlaskPancake(
-      group_funcs={"user", get_group_user, "superuser", get_group_superuser}
+      group_funcs={"user": get_group_user, "superuser": get_group_superuser}
+      # alternatively if using the class-based approach:
+      # group_funcs={"user": get_group_user, "superuser": IsSuperuser}
   )
   # Or, if importing a function from somewhere isn't possible, a string based
   # approach can be used.
@@ -98,6 +113,8 @@ def create_app() -> Flask:
       group_funcs={
           "user", "my.app.account.utils:get_group_user",
           "superuser", "my.app.account.utils:get_group_superuser",
+          # alternatively if using the class-based approach:
+          "superuser", "my.app.account.utils:IsSuperuser",
       }
   )
   ```
@@ -109,22 +126,19 @@ def create_app() -> Flask:
   1. If not, is the flag disable/enabled for superusers/non-superusers?
   1. If not, is the flag disable/enabled by default?
 
-* `Sample`s, have a global "ratio" of 0 - 100%. Each time a check is done on a
-  sample, a random value is checked within these bounds. Hence:
+* `Sample`s, have a global "ratio" of 0 - 100%. On the first check of a sample
+  in a request, a random value is checked within these bounds. If it's lower or
+  equal the set value, it's active, if it's larger, it's inactive.
+
+  Due to the randomness, samples store their state in a request context (Flask's
+  `g` context object). Additionally, in order to provide consistent behavior for
+  a user between requests, the values of the used samples in a request are
+  stored in a cookie in the user's browser. They are then loaded on the next
+  request again and thus provide a stable behavior across requests.
+
+  That means, despite the randomness involved, this behavior is actually safe:
 
   ```python
-  # DO THIS!
-  def foo():
-      is_active = MY_SAMPLE.is_active()
-      if is_active:
-          # do something
-          pass
-      ...
-      if is_active:
-          # do more
-          pass
-
-  # DO NOT DO THIS!
   def foo():
       if MY_SAMPLE.is_active():
           # do something
@@ -135,15 +149,11 @@ def create_app() -> Flask:
           pass
   ```
 
-  In the second example, each call to `is_active()` will be evaluated again.
-  Thus, the first block might be executed, but the second might not (or vice
-  versa).
-
 The persisted state for all three types of feature flags can be cleared, using
 the `clear()` method.
 
-Similarly, one can change the persisted state for Flags and Switches using
-their `disable()` and `enable()` methods. Samples can be updated using their
+Similarly, one can change the persisted state for `Flag`s and `Switch`es using
+their `disable()` and `enable()` methods. `Sample`s can be updated using their
 `set(value: float)` method.
 
 When using `Flag`s, there are `clear_group(group_id)` and
@@ -154,20 +164,53 @@ of.
 
 ### Web API
 
-`flask-pancake` provides an API endpoint that shows all available flags,
-samples and switches and their corresponding states under the `/overview` route
-within the blueprint. It also provides a JSON API to get the status for all
-feature flags for the current user under the `/status` route. The API can be
-enabled by registering a Flask blueprint:
+`flask-pancake` provides an API endpoint that shows all available `Flag`s,
+`Sample`s and `Switch`es and their corresponding states under the `/overview`
+route within the blueprint. It also provides a JSON API to get the status for
+all feature flags for the current user under the `/status` route. The APIs can
+be enabled by registering a Flask blueprint:
 
 ```python
 from flask import Flask
-from flask_pancake import blueprint
+from flask_pancake import FlaskPancake, blueprint
 
 app = Flask(__name__)
+app.secret_key = "s3cr!t"
+pancake = FlaskPancake(app)
 app.register_blueprint(blueprint, url_prefix="/pancakes")
 ```
 
 **WARNING:** The API is not secured in any way! You should use Flask's
 [`Blueprint.before_request()`](https://flask.palletsprojects.com/en/1.1.x/api/?highlight=register_blueprint#flask.Blueprint.before_request)
-feature to add some authentication for the `/overview` endpoint.
+feature to add some authentication for the `/overview` endpoint. Check the
+[`complex_app.py`](https://github.com/MarkusH/flask-pancake/blob/master/examples/complex_app.py)
+for an example.
+
+**NOTE:** The `/status` API endpoint is meant to be used by front-end
+applications to load the status of all `Flag`s,
+`Sample`s and `Switch`es and have them readily available in the front-end. If
+one does not want to expose some feature flags to the front-end via the
+`/status` endpoint, separate the feature flags into two `FlaskPancake` extension
+instances and only allow access to the `/status` endpoint serving the front-end
+feature flags.
+
+As noted above, `Sample`s store their state in cookies between requests. The
+cookie name defaults to the name of the extension, but can be set explicitly
+using the `cookie_name` argument when instantiating the `FlaskPancake()`
+extension. The same goes for the cookie options: by default, cookies will be set
+with the `HttpOnly` and `SameSite=Lax` attributes. The cookie options are passed
+through to [Werkzeug's `set_cookie()` method](https://werkzeug.palletsprojects.com/en/1.0.x/wrappers/?highlight=set_cookie#werkzeug.wrappers.BaseResponse.set_cookie):
+
+```python
+from flask import Flask
+from flask_pancake import FlaskPancake
+
+app = Flask(__name__)
+app.secret_key = "s3cr!t"
+pancake = FlaskPancake(
+    app,
+    name="feature-flags",
+    cookie_name="ff",
+    cookie_options={"httponly": True, "samesite": "Lax", "secure": True},
+)
+```

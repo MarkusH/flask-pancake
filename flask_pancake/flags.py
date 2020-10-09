@@ -5,7 +5,7 @@ import random
 from typing import TYPE_CHECKING, Dict, Generic, Optional, Tuple, TypeVar
 
 from cached_property import cached_property
-from flask import current_app
+from flask import current_app, g
 
 from .constants import EXTENSION_NAME, RAW_FALSE, RAW_TRUE
 from .registry import registry
@@ -210,8 +210,19 @@ class Sample(AbstractFlag[float]):
             )
         super().set_default(default)
 
+    def _load_from_request(self) -> Optional[bool]:
+        return g.get("pancakes", {}).get(self.extension, {}).get(self.name)
+
+    def _store_in_request(self, value: bool):
+        g.setdefault("pancakes", {}).setdefault(self.extension, {})[self.name] = value
+
     def is_active(self) -> bool:
-        return random.uniform(0, 100) <= float(self.get())
+        value = self._load_from_request()
+        if value is not None:
+            return value
+        ret = random.uniform(0, 100) <= float(self.get())
+        self._store_in_request(ret)
+        return ret
 
     def get(self) -> float:
         self._redis_client.setnx(self.key, self.default)
