@@ -214,3 +214,33 @@ pancake = FlaskPancake(
     cookie_options={"httponly": True, "samesite": "Lax", "secure": True},
 )
 ```
+
+### Command Line Interface
+
+`flask-pancake` comes with a CLI that hooks into Flask's own CLI. The same way you can call `flask run` to start your application in development mode you can call `flask pancake`. Here are some examples:
+
+```console
+$ flask pancake
+Usage: flask pancake [OPTIONS] COMMAND [ARGS]...
+
+  Commands to manage flask-pancake flags, samples, and switches.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  flags
+  samples
+  switches
+
+$ flask pancake flags list
+DO_SOMETHING_ELSE: Yes (default: Yes)
+FOO_CAN_DO: No (default: No)
+
+$ flask pancake flags enable FOO_CAN_DO
+Flag 'FOO_CAN_DO' enabled.
+
+$ flask pancake flags list
+DO_SOMETHING_ELSE: Yes (default: Yes)
+FOO_CAN_DO: Yes (default: No)
+```
