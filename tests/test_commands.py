@@ -1,6 +1,8 @@
 import uuid
 from unittest import mock
 
+from flask.app import Flask
+
 from flask_pancake import Flag, Sample, Switch
 from flask_pancake.commands import (
     flag_clear,
@@ -22,7 +24,7 @@ from flask_pancake.commands import (
 from flask_pancake.constants import EXTENSION_NAME
 
 
-def test_flags(app):
+def test_flags(app: Flask):
     runner = app.test_cli_runner()
     feature = Flag("FEATURE", default=False)
 
@@ -42,7 +44,7 @@ def test_flags(app):
     assert "Flag 'FEATURE' cleared." in result.output
 
 
-def test_flags_group(app):
+def test_flags_group(app: Flask):
     runner = app.test_cli_runner()
     feature = Flag("FEATURE", default=False)
     uid = str(uuid.uuid4())
@@ -76,7 +78,7 @@ def test_flags_group(app):
     assert result.output == "FEATURE: N/A (default: No)\n"
 
 
-def test_flag_list(app):
+def test_flag_list(app: Flask):
     runner = app.test_cli_runner()
     Flag("FEATURE1", default=False)
     Flag("FEATURE3", default=True)
@@ -90,7 +92,7 @@ def test_flag_list(app):
     )
 
 
-def test_sample(app):
+def test_sample(app: Flask):
     runner = app.test_cli_runner()
     sample = Sample("SAMPLE", default=0)
 
@@ -99,6 +101,7 @@ def test_sample(app):
 
     result = runner.invoke(sample_set, ["SAMPLE", "42"])
     assert "Sample 'SAMPLE' set to '42.0'." in result.output
+
     with mock.patch("random.uniform", return_value=41):
         assert sample.is_active()
 
@@ -114,7 +117,7 @@ def test_sample(app):
     )
 
 
-def test_sample_list(app):
+def test_sample_list(app: Flask):
     runner = app.test_cli_runner()
     Sample("SAMPLE1", default=1)
     Sample("SAMPLE3", default=2)
@@ -128,7 +131,7 @@ def test_sample_list(app):
     )
 
 
-def test_switch(app):
+def test_switch(app: Flask):
     runner = app.test_cli_runner()
     switch = Switch("SWITCH", default=False)
 
@@ -148,7 +151,7 @@ def test_switch(app):
     assert "Switch 'SWITCH' cleared." in result.output
 
 
-def test_switch_list(app):
+def test_switch_list(app: Flask):
     runner = app.test_cli_runner()
     Switch("SWITCH1", default=False)
     Switch("SWITCH3", default=True)

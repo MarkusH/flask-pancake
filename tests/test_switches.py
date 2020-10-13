@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pytest
+from flask import Flask
 
 from flask_pancake import FlaskPancake, Switch
 from flask_pancake.constants import RAW_FALSE, RAW_TRUE
-
-if TYPE_CHECKING:
-    from flask import Flask
 
 
 def test_switch(app: Flask):

@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING
+from typing import Dict
 
 import pytest
+from flask import Flask
 
 from flask_pancake import Flag
 from flask_pancake.constants import EXTENSION_NAME, RAW_FALSE, RAW_TRUE
-
-if TYPE_CHECKING:
-    from flask import Flask
 
 
 def noop():
@@ -42,7 +40,7 @@ def test_flag(app: Flask):
     assert on.is_active() is False
 
 
-def test_clear(app):
+def test_clear(app: Flask):
     feature = Flag("FEATURE", True)
     key = "FLAG:pancake:FEATURE"
 
@@ -53,7 +51,7 @@ def test_clear(app):
     assert app.extensions["redis"].get(key) is None
 
 
-def test_disable(app):
+def test_disable(app: Flask):
     feature = Flag("FEATURE", True)
     key = "FLAG:pancake:FEATURE"
 
@@ -66,7 +64,7 @@ def test_disable(app):
     assert feature.is_active() is False
 
 
-def test_enable(app):
+def test_enable(app: Flask):
     feature = Flag("FEATURE", False)
     key = "FLAG:pancake:FEATURE"
 
@@ -79,7 +77,7 @@ def test_enable(app):
     assert feature.is_active() is True
 
 
-def test_is_active_group(app):
+def test_is_active_group(app: Flask):
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: "1"}
     feature = Flag("FEATURE", False)
 
@@ -88,7 +86,7 @@ def test_is_active_group(app):
     assert feature.is_active_group("user")
 
 
-def test_is_active_group_cannot_derive(app):
+def test_is_active_group_cannot_derive(app: Flask):
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: None}
     feature = Flag("FEATURE", True)
 
@@ -96,7 +94,7 @@ def test_is_active_group_cannot_derive(app):
         feature.is_active_group("user")
 
 
-def test_clear_group(app):
+def test_clear_group(app: Flask):
     uid = str(uuid.uuid4())
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: uid}
     feature = Flag("FEATURE", True)
@@ -117,7 +115,7 @@ def test_clear_group(app):
     assert app.extensions["redis"].smembers(tracking_key) == set()
 
 
-def test_clear_group_cannot_derive(app):
+def test_clear_group_cannot_derive(app: Flask):
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: None}
     feature = Flag("FEATURE", True)
 
@@ -125,10 +123,10 @@ def test_clear_group_cannot_derive(app):
         feature.clear_group("user")
 
 
-def test_clear_all_group(app):
+def test_clear_all_group(app: Flask):
     uid1 = str(uuid.uuid4())
     uid2 = str(uuid.uuid4())
-    context = {}
+    context: Dict = {}
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: context["uid"]}
     feature = Flag("FEATURE", False)
     object_key1 = f"FLAG:pancake:k:user:FEATURE:{uid1}"
@@ -158,7 +156,7 @@ def test_clear_all_group(app):
     assert app.extensions["redis"].smembers(tracking_key) == set()
 
 
-def test_disable_group(app):
+def test_disable_group(app: Flask):
     uid = str(uuid.uuid4())
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: uid}
     feature = Flag("FEATURE", True)
@@ -176,7 +174,7 @@ def test_disable_group(app):
     assert feature.is_active() is False
 
 
-def test_disable_group_cannot_derive(app):
+def test_disable_group_cannot_derive(app: Flask):
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: None}
     feature = Flag("FEATURE", True)
 
@@ -184,7 +182,7 @@ def test_disable_group_cannot_derive(app):
         feature.disable_group("user")
 
 
-def test_enable_group(app):
+def test_enable_group(app: Flask):
     uid = str(uuid.uuid4())
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: uid}
     feature = Flag("FEATURE", False)
@@ -202,7 +200,7 @@ def test_enable_group(app):
     assert feature.is_active() is True
 
 
-def test_enable_group_cannot_derive(app):
+def test_enable_group_cannot_derive(app: Flask):
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: None}
     feature = Flag("FEATURE", True)
 
@@ -210,7 +208,7 @@ def test_enable_group_cannot_derive(app):
         feature.enable_group("user")
 
 
-def test_clear_disable_enable_group_object_id(app):
+def test_clear_disable_enable_group_object_id(app: Flask):
     app.extensions[EXTENSION_NAME]._group_funcs = {"user": noop}
     feature = Flag("FEATURE", True)
     object_key1 = "FLAG:pancake:k:user:FEATURE:1"

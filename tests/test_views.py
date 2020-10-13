@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+from flask.app import Flask
 
 from flask_pancake import Flag, GroupFunc, Sample, Switch, blueprint
 from flask_pancake.constants import EXTENSION_NAME
@@ -12,7 +13,7 @@ def noop():
 
 
 @pytest.fixture
-def sample_data(app):
+def sample_data(app: Flask):
     flag1 = Flag("Flag1", default=False)
     flag2 = Flag("Flag2", default=True)
     flag3 = Flag("Flag3", default=False)
@@ -29,7 +30,7 @@ def sample_data(app):
 
 
 @pytest.fixture
-def sample_data_groups(sample_data, app):
+def sample_data_groups(sample_data, app: Flask):
     class IsAdmin(GroupFunc):
         def __call__(self):
             return None  # pragma: no cover
@@ -45,7 +46,7 @@ def sample_data_groups(sample_data, app):
     flag2.enable_group("admin", object_id="no")
 
 
-def test_aggregate_data_empty(app):
+def test_aggregate_data_empty(app: Flask):
     assert aggregate_data(app.extensions[EXTENSION_NAME]) == {
         "flags": [],
         "group_ids": [],
@@ -55,7 +56,7 @@ def test_aggregate_data_empty(app):
     }
 
 
-def test_aggregate_data(sample_data, app):
+def test_aggregate_data(sample_data, app: Flask):
     assert aggregate_data(app.extensions[EXTENSION_NAME]) == {
         "flags": [
             {"default": False, "groups": {}, "is_active": False, "name": "Flag1"},
@@ -76,7 +77,7 @@ def test_aggregate_data(sample_data, app):
     }
 
 
-def test_aggregate_data_groups(sample_data_groups, app):
+def test_aggregate_data_groups(sample_data_groups, app: Flask):
     assert aggregate_data(app.extensions[EXTENSION_NAME]) == {
         "name": "pancake",
         "group_ids": ["user", "admin"],
@@ -112,7 +113,7 @@ def test_aggregate_data_groups(sample_data_groups, app):
     }
 
 
-def test_aggregate_is_active_data_empty(app):
+def test_aggregate_is_active_data_empty(app: Flask):
     assert aggregate_is_active_data(app.extensions[EXTENSION_NAME]) == {
         "flags": [],
         "samples": [],
@@ -120,7 +121,7 @@ def test_aggregate_is_active_data_empty(app):
     }
 
 
-def test_aggregate_is_active_data(sample_data, app):
+def test_aggregate_is_active_data(sample_data, app: Flask):
     with mock.patch("random.uniform", side_effect=(11, 25)):
         data = aggregate_is_active_data(app.extensions[EXTENSION_NAME])
     assert data == {
@@ -141,7 +142,7 @@ def test_aggregate_is_active_data(sample_data, app):
     }
 
 
-def test_aggregate_is_active_data_groups(sample_data_groups, app):
+def test_aggregate_is_active_data_groups(sample_data_groups, app: Flask):
     with mock.patch("random.uniform", side_effect=(13, 24)):
         data = aggregate_is_active_data(app.extensions[EXTENSION_NAME])
     assert data == {
@@ -162,7 +163,7 @@ def test_aggregate_is_active_data_groups(sample_data_groups, app):
     }
 
 
-def test_overview_html(sample_data_groups, app):
+def test_overview_html(sample_data_groups, app: Flask):
     app.register_blueprint(blueprint, url_prefix="/p")
     with app.test_client() as client:
         resp = client.get("/p/overview")
@@ -225,7 +226,7 @@ def test_overview_html(sample_data_groups, app):
     )
 
 
-def test_overview_json(sample_data_groups, app):
+def test_overview_json(sample_data_groups, app: Flask):
     app.register_blueprint(blueprint, url_prefix="/p")
     with app.test_client() as client:
         resp = client.get("/p/overview", content_type="application/json")
@@ -265,14 +266,14 @@ def test_overview_json(sample_data_groups, app):
     }
 
 
-def test_overview_ext_not_found(app):
+def test_overview_ext_not_found(app: Flask):
     app.register_blueprint(blueprint, url_prefix="/p")
     with app.test_client() as client:
         resp = client.get("/p/overview/foo")
     assert resp.status_code == 404
 
 
-def test_status_json(sample_data_groups, app):
+def test_status_json(sample_data_groups, app: Flask):
     app.register_blueprint(blueprint, url_prefix="/p")
     with app.test_client() as client:
         with mock.patch("random.uniform", side_effect=(11, 25)):
@@ -296,7 +297,7 @@ def test_status_json(sample_data_groups, app):
     }
 
 
-def test_status_ext_not_found(app):
+def test_status_ext_not_found(app: Flask):
     app.register_blueprint(blueprint, url_prefix="/p")
     with app.test_client() as client:
         resp = client.get("/p/status/foo")
