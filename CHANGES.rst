@@ -5,6 +5,9 @@ CHANGELOG
 Unreleased
 ==========
 
+0.5.0 - 2020-10-13
+==================
+
 - BREAKING: Added persistence of the status of `Sample`s between requests. With
   this change, checking for a sample within the same request multiple times
   will yield the same status each time. And to ensure the same status across
