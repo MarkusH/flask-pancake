@@ -5,6 +5,9 @@ CHANGELOG
 Unreleased
 ==========
 
+0.5.1 - 2020-10-13
+==================
+
 - Fixed a packaging bug that prevented the HTML template for the overview page
   to be included.
 
