@@ -166,7 +166,7 @@ def test_aggregate_is_active_data_groups(sample_data_groups, app: Flask):
 def test_overview_html(sample_data_groups, app: Flask):
     app.register_blueprint(blueprint, url_prefix="/p")
     with app.test_client() as client:
-        resp = client.get("/p/overview")
+        resp = client.get("/p/overview", headers={"Accept": "text/html"})
     assert resp.status_code == 200
     assert resp.data.decode() == (
         "<h1>Flask Pancake</h1>\n"
@@ -226,10 +226,11 @@ def test_overview_html(sample_data_groups, app: Flask):
     )
 
 
-def test_overview_json(sample_data_groups, app: Flask):
+@pytest.mark.parametrize("headers", [{"Accept": "application/json"}, {}, None])
+def test_overview_json(headers, sample_data_groups, app: Flask):
     app.register_blueprint(blueprint, url_prefix="/p")
     with app.test_client() as client:
-        resp = client.get("/p/overview", content_type="application/json")
+        resp = client.get("/p/overview", headers=headers)
     assert resp.status_code == 200
     assert resp.json == {
         "flags": [
@@ -278,7 +279,7 @@ def test_status_json(sample_data_groups, app: Flask):
     app.secret_key = "s3cr!t"
     with app.test_client() as client:
         with mock.patch("random.uniform", side_effect=(11, 25)):
-            resp = client.get("/p/status", content_type="application/json")
+            resp = client.get("/p/status")
     assert resp.status_code == 200
     assert resp.json == {
         "flags": [

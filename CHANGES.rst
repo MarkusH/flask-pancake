@@ -5,6 +5,8 @@ CHANGELOG
 Unreleased
 ==========
 
+- Fixed content negotiation for overview page.
+
 0.5.1 - 2020-10-13
 ==================
 
