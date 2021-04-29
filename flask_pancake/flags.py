@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 import random
-from typing import TYPE_CHECKING, Dict, Generic, Optional, Tuple, TypeVar, List
+from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Tuple, TypeVar
 
 from cached_property import cached_property
 from flask import current_app, g
