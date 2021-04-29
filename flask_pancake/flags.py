@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 import random
-from typing import TYPE_CHECKING, Dict, Generic, Optional, Tuple, TypeVar
+from typing import TYPE_CHECKING, Dict, Generic, List, Optional, Tuple, TypeVar
 
 from cached_property import cached_property
 from flask import current_app, g
@@ -154,6 +154,14 @@ class Flag(BaseFlag):
             return False
 
         return None
+
+    def get_tracked_object_ids(self, group_id: str) -> List[str]:
+        object_ids = []
+        _, tracking_key = self._get_group_keys(group_id)
+        object_keys = self._redis_client.smembers(tracking_key)
+        for object_key in object_keys:
+            object_ids.append(object_key.decode("utf-8").rpartition(":")[2])
+        return object_ids
 
     def _track_object(self, group_id: str, object_key: str):
         self._redis_client.sadd(self._get_group_keys(group_id)[1], object_key)

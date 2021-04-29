@@ -352,3 +352,19 @@ def test_get_group_keys_group_not_defined(app: Flask):
     )
     with pytest.raises(RuntimeError, match=msg):
         feature._get_group_keys("user")
+
+
+def test_get_tracked_object_ids(app: Flask):
+    uid1 = str(uuid.uuid4())
+    uid2 = str(uuid.uuid4())
+    app.extensions[EXTENSION_NAME]._group_funcs = {"user": lambda: noop}
+    feature = Flag("FEATURE", False)
+    feature.enable_group("user", object_id=uid1)
+    feature.disable_group("user", object_id=uid2)
+
+    tracked_object_ids = feature.get_tracked_object_ids("user")
+    assert set(tracked_object_ids) == set([uid1, uid2])
+
+    feature.clear_group("user", object_id=uid1)
+    tracked_object_ids = feature.get_tracked_object_ids("user")
+    assert set(tracked_object_ids) == set([uid2])
