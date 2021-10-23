@@ -93,13 +93,13 @@ def overview(pancake):
 
     context = aggregate_data(ext)
 
-    if request.content_type == "application/json":
-        return jsonify(context)
-    else:
+    if request.accept_mimetypes.accept_html:
         try:
             return render_template("flask_pancake/overview.html", **context)
         except TemplateNotFound:  # pragma: no cover
             abort(404)
+    else:
+        return jsonify(context)
 
 
 @bp.route("/status", defaults={"pancake": EXTENSION_NAME})

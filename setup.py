@@ -15,6 +15,7 @@ setuptools.setup(
     packages=setuptools.find_packages(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests"],
     ),
+    include_package_data=True,
     install_requires=["flask>=1.0", "flask-redis>=0.4.0", "cached-property>=1.5,<2"],
     extras_require={"testing": ["pytest>=5.3,<5.4", "pytest-cov>=2.8,<3"]},
     setup_requires=["setuptools_scm>=3.4.2,<4"],

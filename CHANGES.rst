@@ -5,6 +5,20 @@ CHANGELOG
 Unreleased
 ==========
 
+0.5.2 - 2020-10-14
+==================
+
+- Fixed content negotiation for overview page.
+
+0.5.1 - 2020-10-13
+==================
+
+- Fixed a packaging bug that prevented the HTML template for the overview page
+  to be included.
+
+0.5.0 - 2020-10-13
+==================
+
 - BREAKING: Added persistence of the status of `Sample`s between requests. With
   this change, checking for a sample within the same request multiple times
   will yield the same status each time. And to ensure the same status across
